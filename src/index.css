@@ -1,0 +1,591 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --background: 220 20% 4%;
+    --foreground: 210 20% 92%;
+
+    --card: 220 18% 7%;
+    --card-foreground: 210 20% 92%;
+
+    --popover: 220 18% 7%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 142 72% 50%;
+    --primary-foreground: 220 20% 4%;
+
+    --secondary: 220 16% 12%;
+    --secondary-foreground: 210 20% 80%;
+
+    --muted: 220 14% 10%;
+    --muted-foreground: 215 12% 50%;
+
+    --accent: 185 72% 45%;
+    --accent-foreground: 220 20% 4%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 14% 14%;
+    --input: 220 14% 14%;
+    --ring: 142 72% 50%;
+
+    --radius: 0.5rem;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 20% 4%;
+
+    --success: 142 72% 50%;
+    --success-foreground: 220 20% 4%;
+
+    --terminal: 142 72% 50%;
+    --terminal-dim: 142 30% 30%;
+    --terminal-bg: 220 20% 3%;
+
+    --glow-primary: 0 0 20px hsl(142 72% 50% / 0.15);
+    --glow-accent: 0 0 20px hsl(185 72% 45% / 0.15);
+
+    --sidebar-background: 220 18% 5%;
+    --sidebar-foreground: 210 20% 80%;
+    --sidebar-primary: 142 72% 50%;
+    --sidebar-primary-foreground: 220 20% 4%;
+    --sidebar-accent: 220 16% 10%;
+    --sidebar-accent-foreground: 210 20% 80%;
+    --sidebar-border: 220 14% 12%;
+    --sidebar-ring: 142 72% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #050510 !important;
+    position: relative;
+    scroll-behavior: smooth;
+  }
+
+  /* Scrolling effect - parallax movement based on scroll */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* All elements get subtle scroll transform */
+  body > *:not(body::before):not(body::after) {
+    animation: scrollFloat 6s ease-in-out infinite;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .glow-border {
+    box-shadow: var(--glow-primary);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .glow-accent-border {
+    box-shadow: var(--glow-accent);
+    border-color: hsl(var(--accent) / 0.3);
+  }
+
+  .terminal-text {
+    color: hsl(var(--terminal));
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .terminal-text-dim {
+    color: hsl(var(--terminal-dim));
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .gradient-mesh {
+    background: 
+      radial-gradient(at 20% 20%, hsl(142 72% 50% / 0.05) 0%, transparent 50%),
+      radial-gradient(at 80% 80%, hsl(185 72% 45% / 0.05) 0%, transparent 50%),
+      radial-gradient(at 50% 50%, hsl(220 20% 4%) 0%, hsl(220 20% 4%) 100%);
+  }
+
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+  .card-hover:hover {
+    box-shadow: var(--glow-primary);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .grid-pattern {
+    background-image: 
+      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .scanline {
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      hsl(var(--primary) / 0.02) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+  }
+}
+
+/* ============================================
+   PREMIUM LIQUID DIFFUSION EFFECT - PURE CSS
+   "Ink dissolving into dark water"
+   ============================================ */
+
+/* Root variables for liquid theme */
+@layer base {
+  :root {
+    /* Deep navy/black background - base color */
+    --liquid-bg: #050510;
+    
+    /* Prominent blue ink colors for diffusion - INCREASED opacity */
+    --liquid-ink-primary: rgba(41, 200, 255, 0.5);
+    --liquid-ink-secondary: rgba(30, 120, 200, 0.4);
+    --liquid-ink-tertiary: rgba(59, 130, 246, 0.3);
+    
+    /* Animation timing - slow, soothing */
+    --liquid-slow: 15s;
+    --liquid-medium: 20s;
+    --liquid-fast: 14s;
+  }
+
+  /* Deep water base layer - primary ambient light */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      /* Primary diffusion orb - center-left, sinking motion */
+      radial-gradient(
+        ellipse 900px 700px at 25% 50%,
+        var(--liquid-ink-primary) 0%,
+        rgba(41, 200, 255, 0.25) 30%,
+        rgba(41, 200, 255, 0.08) 50%,
+        transparent 80%
+      ),
+      /* Secondary diffusion orb - upper right, floating motion */
+      radial-gradient(
+        ellipse 1000px 600px at 75% 30%,
+        var(--liquid-ink-secondary) 0%,
+        rgba(30, 120, 200, 0.2) 35%,
+        rgba(30, 120, 200, 0.05) 55%,
+        transparent 85%
+      ),
+      /* Tertiary ambient glow - bottom right */
+      radial-gradient(
+        ellipse 800px 500px at 65% 75%,
+        var(--liquid-ink-tertiary) 0%,
+        rgba(59, 130, 246, 0.15) 40%,
+        transparent 75%
+      ),
+      /* Base deep navy background */
+      var(--liquid-bg);
+    
+    animation: 
+      liquidDriftPrimary var(--liquid-slow) cubic-bezier(0.4, 0.0, 0.2, 1) infinite,
+      liquidBreathe 45s cubic-bezier(0.4, 0.0, 0.2, 1) infinite,
+      scrollResponsive 3s ease-in-out infinite;
+    
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1;
+    filter: blur(0px);
+    will-change: transform;
+  }
+
+  /* Second liquid layer - adds organic depth and flow */
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background:
+      /* Swirling secondary diffusion - left side */
+      radial-gradient(
+        ellipse 950px 650px at 15% 35%,
+        rgba(59, 130, 246, 0.35) 0%,
+        rgba(59, 130, 246, 0.15) 45%,
+        transparent 75%
+      ),
+      /* Counter-flow diffusion - right side */
+      radial-gradient(
+        ellipse 850px 700px at 80% 65%,
+        rgba(41, 200, 255, 0.3) 0%,
+        rgba(41, 200, 255, 0.12) 50%,
+        transparent 80%
+      );
+    
+    animation:
+      liquidDriftSecondary var(--liquid-medium) cubic-bezier(0.4, 0.0, 0.2, 1) infinite reverse,
+      liquidPulse 32s cubic-bezier(0.4, 0.0, 0.2, 1) infinite,
+      scrollResponsive 4s ease-in-out infinite reverse;
+    
+    pointer-events: none;
+    z-index: 1;
+    opacity: 1;
+    mix-blend-mode: screen;
+    filter: blur(0px);
+    will-change: transform;
+  }
+}
+
+/* ============================================
+   LIQUID ANIMATIONS - Smooth, Organic Motion
+   ============================================ */
+
+/* Primary liquid drift - slow floating motion */
+@keyframes liquidDriftPrimary {
+  0% {
+    background-position: 0% 0%;
+    transform: translate(0%, 0%) scale(1);
+  }
+  25% {
+    transform: translate(4%, -3%) scale(1.05);
+  }
+  50% {
+    transform: translate(2%, 4%) scale(1);
+  }
+  75% {
+    transform: translate(-3%, 2%) scale(0.95);
+  }
+  100% {
+    background-position: 0% 0%;
+    transform: translate(0%, 0%) scale(1);
+  }
+}
+
+/* Secondary liquid drift - counter motion for depth */
+@keyframes liquidDriftSecondary {
+  0% {
+    transform: translate(0%, 0%) scale(0.95);
+  }
+  25% {
+    transform: translate(-3%, 3%) scale(1);
+  }
+  50% {
+    transform: translate(-3%, -2%) scale(1.05);
+  }
+  75% {
+    transform: translate(2%, -2%) scale(1);
+  }
+  100% {
+    transform: translate(0%, 0%) scale(0.95);
+  }
+}
+
+/* Subtle breathing effect - relaxing opacity pulse */
+@keyframes liquidBreathe {
+  0% {
+    opacity: 0.7;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+/* Scroll-responsive effect - reacts to page scroll */
+@keyframes scrollResponsive {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(20px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Floating effect for content on scroll */
+@keyframes scrollFloat {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Gentle pulsing effect - adds life to the water */
+@keyframes liquidPulse {
+  0% {
+    filter: blur(2px);
+    opacity: 0.8;
+  }
+  20% {
+    filter: blur(3px);
+    opacity: 1;
+  }
+  50% {
+    filter: blur(2px);
+    opacity: 1;
+  }
+  80% {
+    filter: blur(3px);
+    opacity: 0.9;
+  }
+  100% {
+    filter: blur(2px);
+    opacity: 0.8;
+  }
+}
+
+/* ============================================
+   INTERACTIVE LIQUID EFFECTS
+   ============================================ */
+
+@layer components {
+  /* Ensure content appears above liquid background */
+  body > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Global hover diffusion - subtle ink spread on interaction */
+  html {
+    --mouse-x: 50%;
+    --mouse-y: 50%;
+  }
+
+  /* Interactive elements get subtle diffusion aura */
+  a:hover,
+  button:hover,
+  [role="button"]:hover {
+    animation: subtleDiffusion 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .glow-border {
+    box-shadow: var(--glow-primary);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+}
+
+/* Subtle diffusion animation on hover */
+@keyframes subtleDiffusion {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(41, 200, 255, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(41, 200, 255, 0.3));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(41, 200, 255, 0));
+  }
+}
+
+/* Floating animation for content on scroll */
+@keyframes floatOnScroll {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY & PERFORMANCE
+   ============================================ */
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none !important;
+    opacity: 0.5;
+  }
+
+  a:hover,
+  button:hover,
+  [role="button"]:hover {
+    animation: none;
+  }
+}
+
+/* ============================================
+   ACCESSIBILITY & PERFORMANCE
+   ============================================ */
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none !important;
+    opacity: 0.5;
+  }
+
+  a:hover,
+  button:hover,
+  [role="button"]:hover {
+    animation: none;
+  }
+}
+
+/* Mobile optimization - lighter effects for better performance */
+@media (max-width: 768px) {
+  :root {
+    --liquid-slow: 24s;
+    --liquid-medium: 32s;
+    --liquid-fast: 18s;
+  }
+
+  body::before,
+  body::after {
+    filter: blur(1.5px);
+  }
+
+  body::after {
+    opacity: 0.7;
+  }
+}
+
+/* High performance mode for low-end devices */
+@media (prefers-color-scheme: dark) and (max-width: 480px) {
+  body::before {
+    animation: liquidDriftPrimary var(--liquid-slow) cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  }
+
+  body::after {
+    display: none;
+  }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR STYLES
+   ============================================ */
+
+/* Custom scrollbar for modern SaaS look */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(2, 8, 23, 0.5);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.5), rgba(34, 211, 238, 0.5));
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.8), rgba(34, 211, 238, 0.8));
+}
+
+/* Firefox scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.5) rgba(2, 8, 23, 0.5);
+}
+
+/* ============================================
+   DASHBOARD PREMIUM STYLES
+   ============================================ */
+
+/* Fade-in animation for components */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Apply fade-in to dashboard sections */
+.dashboard-section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Smooth transitions for interactive elements */
+button,
+a,
+input,
+textarea {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Remove focus outline and add custom focus ring */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* Active state for buttons */
+button:active {
+  transform: scale(0.98);
+}
+
+/* Status badges */
+.badge-success {
+  @apply bg-emerald-500/15 text-emerald-300 border border-emerald-500/20;
+}
+
+.badge-warning {
+  @apply bg-amber-500/15 text-amber-300 border border-amber-500/20;
+}
+
+.badge-error {
+  @apply bg-red-500/15 text-red-300 border border-red-500/20;
+}
+
+.badge-info {
+  @apply bg-cyan-500/15 text-cyan-300 border border-cyan-500/20;
+}
+    
