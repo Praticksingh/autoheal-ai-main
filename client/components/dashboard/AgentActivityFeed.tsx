@@ -1,0 +1,82 @@
+import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Activity, Terminal } from 'lucide-react';
+import { useAnalysis } from '@/context/useAnalysis';
+
+const FALLBACK_FEED = [
+  'Cloning repository...',
+  'Running tests...',
+  '3 test failures detected',
+  'Generating code fixes',
+  'Applying patch to utils/parser.ts',
+  'Pipeline verification passed',
+];
+
+export default function AgentActivityFeed() {
+  const { state } = useAnalysis();
+  const [typed, setTyped] = useState('');
+
+  const messages = useMemo(() => {
+    if (state.logs.length === 0) {
+      return FALLBACK_FEED;
+    }
+    return state.logs.slice(-8).map((log) => log.message);
+  }, [state.logs]);
+
+  const activeMessage = messages.at(-1) || 'Awaiting agent activity...';
+
+  useEffect(() => {
+    let index = 0;
+    setTyped('');
+
+    const timer = setInterval(() => {
+      index += 1;
+      setTyped(activeMessage.slice(0, index));
+      if (index >= activeMessage.length) {
+        clearInterval(timer);
+      }
+    }, 22);
+
+    return () => clearInterval(timer);
+  }, [activeMessage]);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-950/90 p-5 shadow-xl">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="rounded-md border border-purple-500/30 bg-purple-500/10 p-2">
+          <Activity className="h-4 w-4 text-purple-300" />
+        </div>
+        <h3 className="text-sm font-semibold text-slate-100">Live Agent Execution Feed</h3>
+      </div>
+
+      <div className="mb-4 rounded-lg border border-white/10 bg-slate-950/70 p-3 font-mono text-xs text-green-300">
+        <div className="mb-2 flex items-center gap-2 text-slate-500">
+          <Terminal className="h-3.5 w-3.5" />
+          terminal stream
+        </div>
+        <div className="min-h-5">
+          {'>'} {typed}
+          <motion.span
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 1, repeat: Infinity }}
+            className="ml-1 inline-block h-3 w-1 bg-green-300 align-middle"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {messages.slice(-5).reverse().map((message, index) => (
+          <motion.div
+            key={`${message}-${index}`}
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.04 }}
+            className="rounded-md border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-300"
+          >
+            {message}
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
