@@ -2,6 +2,7 @@ import { apiClient } from './api';
 import type {
   AnalyzeRepoRequest,
   AnalyzeRepoResponse,
+  BugExplanation,
   HistoryResponse,
 } from '../../shared/types/api';
 
@@ -10,6 +11,8 @@ export interface StartRunParams {
   userName: string;
   leaderName: string;
   mode: "individual" | "team";
+  autoApproveEnabled: boolean;
+  confidenceThreshold: number;
 }
 
 const GITHUB_REPO_URL_REGEX = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/i;
@@ -65,6 +68,7 @@ export interface PipelineRunResponse {
     status: 'success' | 'failed' | 'running';
     timestamp: string;
   }>;
+  explanations: BugExplanation[];
   tests?: {
     passed: boolean;
     skipped?: boolean;
@@ -72,6 +76,32 @@ export interface PipelineRunResponse {
     stdout?: string;
     stderr?: string;
   };
+}
+
+export interface CommitFixedFilePayload {
+  filePath: string;
+  content?: string;
+  diff?: string;
+}
+
+export interface CommitFixRequest {
+  repoUrl: string;
+  branchName: string;
+  commitMessage: string;
+  fixedFiles: CommitFixedFilePayload[];
+  aiExplanation?: string;
+}
+
+export interface CommitFixResponse {
+  success: boolean;
+  message: string;
+  repository: string;
+  branchName: string;
+  commitHash: string;
+  commitMessage: string;
+  committedFiles: string[];
+  pullRequestNumber: number;
+  pullRequestUrl: string;
 }
 
 export class AgentService {
@@ -86,6 +116,10 @@ export class AgentService {
       leaderName: params.leaderName.trim(),
       mode: params.mode,
       runId: params.runId,
+      userSettings: {
+        autoApproveEnabled: params.autoApproveEnabled,
+        confidenceThreshold: params.confidenceThreshold,
+      },
     };
 
     try {
@@ -100,6 +134,7 @@ export class AgentService {
         bugsFound: response.bugsFound,
         fixesApplied: response.fixesApplied,
         bugs: response.bugs,
+        explanations: response.explanations || [],
         score: response.score,
         analysisTime: response.analysisTime,
         timeline: response.timeline,
@@ -120,6 +155,29 @@ export class AgentService {
         count: 0,
         runs: [],
       };
+    }
+  }
+
+  static async commitFix(payload: CommitFixRequest): Promise<CommitFixResponse> {
+    if (!GITHUB_REPO_URL_REGEX.test(payload.repoUrl.trim())) {
+      throw new Error('Invalid repository URL. Please use a valid https://github.com/owner/repo URL.');
+    }
+
+    if (!Array.isArray(payload.fixedFiles) || payload.fixedFiles.length === 0) {
+      throw new Error('No fixed files found to commit.');
+    }
+
+    try {
+      return await apiClient.post<CommitFixResponse, CommitFixRequest>('/api/github/commit-fix', {
+        repoUrl: payload.repoUrl.trim(),
+        branchName: payload.branchName,
+        commitMessage: payload.commitMessage,
+        fixedFiles: payload.fixedFiles,
+        aiExplanation: payload.aiExplanation,
+      });
+    } catch (error) {
+      const mapped = mapStartRunError(error);
+      throw new Error(mapped.message || 'Failed to commit fix to repository.');
     }
   }
 

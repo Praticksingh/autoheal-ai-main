@@ -1,10 +1,12 @@
 import { createContext, useReducer, type ReactNode } from 'react';
 import { type AgentFix, type TimelineEvent, type LogEntry } from '../services/mock-data';
+import { type BugExplanation } from '../../shared/types/api';
 
 export interface AnalysisContextState {
   currentRepo: string | null;
   analysisStatus: 'idle' | 'running' | 'completed' | 'failed';
   bugResults: AgentFix[];
+  bugExplanations: BugExplanation[];
   score: number | null;
   timeline: TimelineEvent[];
   logs: LogEntry[];
@@ -15,6 +17,7 @@ type AnalysisAction =
   | { type: 'SET_CURRENT_REPO'; payload: string }
   | { type: 'SET_ANALYSIS_STATUS'; payload: AnalysisContextState['analysisStatus'] }
   | { type: 'SET_BUG_RESULTS'; payload: AgentFix[] }
+  | { type: 'SET_BUG_EXPLANATIONS'; payload: BugExplanation[] }
   | { type: 'SET_SCORE'; payload: number }
   | { type: 'SET_TIMELINE'; payload: TimelineEvent[] }
   | { type: 'SET_LOGS'; payload: LogEntry[] }
@@ -25,6 +28,7 @@ const initialState: AnalysisContextState = {
   currentRepo: null,
   analysisStatus: 'idle',
   bugResults: [],
+  bugExplanations: [],
   score: null,
   timeline: [],
   logs: [],
@@ -39,6 +43,8 @@ function analysisReducer(state: AnalysisContextState, action: AnalysisAction): A
       return { ...state, analysisStatus: action.payload };
     case 'SET_BUG_RESULTS':
       return { ...state, bugResults: action.payload };
+    case 'SET_BUG_EXPLANATIONS':
+      return { ...state, bugExplanations: action.payload };
     case 'SET_SCORE':
       return { ...state, score: action.payload };
     case 'SET_TIMELINE':
@@ -59,6 +65,7 @@ export interface AnalysisContextValue {
   setCurrentRepo: (repo: string) => void;
   setAnalysisStatus: (status: AnalysisContextState['analysisStatus']) => void;
   setBugResults: (results: AgentFix[]) => void;
+  setBugExplanations: (explanations: BugExplanation[]) => void;
   setScore: (score: number) => void;
   setTimeline: (timeline: TimelineEvent[]) => void;
   setLogs: (logs: LogEntry[]) => void;
@@ -87,6 +94,10 @@ export function AnalysisProvider({ children }: AnalysisProviderProps) {
     dispatch({ type: 'SET_BUG_RESULTS', payload: results });
   };
 
+  const setBugExplanations = (explanations: BugExplanation[]) => {
+    dispatch({ type: 'SET_BUG_EXPLANATIONS', payload: explanations });
+  };
+
   const setScore = (score: number) => {
     dispatch({ type: 'SET_SCORE', payload: score });
   };
@@ -112,6 +123,7 @@ export function AnalysisProvider({ children }: AnalysisProviderProps) {
     setCurrentRepo,
     setAnalysisStatus,
     setBugResults,
+    setBugExplanations,
     setScore,
     setTimeline,
     setLogs,

@@ -23,6 +23,14 @@ function validateAnalyzeRepoRequest(req, res, next) {
     const leaderName = sanitizeString(payload.leaderName);
     const mode = sanitizeString(payload.mode).toLowerCase();
     const runId = payload.runId ? sanitizeString(payload.runId) : undefined;
+    const rawSettings = payload.userSettings && typeof payload.userSettings === 'object'
+      ? payload.userSettings
+      : {};
+    const autoApproveEnabled = Boolean(rawSettings.autoApproveEnabled);
+    const parsedThreshold = Number(rawSettings.confidenceThreshold);
+    const confidenceThreshold = Number.isFinite(parsedThreshold)
+      ? Math.min(100, Math.max(0, Math.trunc(parsedThreshold)))
+      : 95;
 
     if (!repoUrl || !REPO_URL_REGEX.test(repoUrl)) {
       throw createValidationError('Invalid GitHub repository URL');
@@ -49,6 +57,10 @@ function validateAnalyzeRepoRequest(req, res, next) {
       teamName,
       leaderName,
       mode,
+      userSettings: {
+        autoApproveEnabled,
+        confidenceThreshold,
+      },
       ...(runId ? { runId } : {}),
     };
 

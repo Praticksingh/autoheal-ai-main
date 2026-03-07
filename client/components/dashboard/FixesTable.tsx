@@ -1,5 +1,6 @@
 import { CheckCircle2, XCircle, SkipForward, Wrench, AlertTriangle } from "lucide-react";
 import { useAnalysis } from "@/context/useAnalysis";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const statusConfig = {
   fixed: { icon: CheckCircle2, label: "Fixed", className: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20" },
@@ -68,12 +69,34 @@ const FixesTable = () => {
             {fixes.map((fix, idx) => {
               const statusInfo = statusConfig[fix.status];
               const StatusIcon = statusInfo.icon;
+              const isHighRisk = typeof fix.highRiskScore === 'boolean'
+                ? fix.highRiskScore
+                : typeof fix.highRiskScore === 'number' && fix.highRiskScore > 80;
               return (
                 <tr
                   key={fix.id}
                   className="border-b border-white/5 hover:bg-white/5 transition-colors duration-200"
                 >
-                  <td className="px-8 py-4 font-mono text-sm text-slate-300">{fix.fileName}</td>
+                  <td className="px-8 py-4 font-mono text-sm text-slate-300">
+                    <div className="inline-flex items-center gap-2">
+                      <span>{fix.fileName}</span>
+                      {isHighRisk && (
+                        <TooltipProvider delayDuration={120}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex items-center gap-1 rounded-md border border-amber-400/30 bg-amber-400/20 px-2 py-0.5 text-[11px] font-semibold text-amber-900 cursor-help">
+                                <AlertTriangle className="h-3 w-3" />
+                                High Risk of Failure
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent variant="secondary">
+                              This file is frequently associated with CI/CD pipeline breaks.
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <span className={`inline-block px-3 py-1 rounded-lg font-medium text-xs ${bugTypeColors[fix.bugType]}`}>
                       {fix.bugType}

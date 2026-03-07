@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { GitBranch, User, Users, Play, Loader2, Copy, Info, Keyboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { type StartRunParams } from "@/services/agentService";
 import { useRunForm } from "@/hooks/useRunForm";
 import { toast } from "@/components/ui/sonner";
@@ -22,6 +24,10 @@ const InputPanel = ({ onStartRun, isRunning }: InputPanelProps) => {
     setLeaderName,
     mode,
     setMode,
+    autoApproveEnabled,
+    setAutoApproveEnabled,
+    confidenceThreshold,
+    setConfidenceThreshold,
     handleSubmit,
     submitForm,
   } = useRunForm(onStartRun);
@@ -124,6 +130,51 @@ const InputPanel = ({ onStartRun, isRunning }: InputPanelProps) => {
                 className="bg-slate-900/50 border-white/10 text-slate-100 placeholder:text-slate-500 h-11 rounded-lg focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all duration-300"
               />
             </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-slate-900/40 p-4 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-slate-200">Enable Zero-Touch Auto-Healing for Minor Errors (Linting/Syntax)</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="text-slate-500 hover:text-slate-300 transition-colors">
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Automatically opens a PR when confidence is high and issue type is minor.
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Allow AutoHealer to open a Pull Request automatically for safe, high-confidence minor fixes.</p>
+              </div>
+              <Switch
+                checked={autoApproveEnabled}
+                onCheckedChange={setAutoApproveEnabled}
+                aria-label="Enable Zero-Touch Auto-Healing"
+              />
+            </div>
+
+            {autoApproveEnabled && (
+              <div className="space-y-3 rounded-lg border border-white/10 bg-slate-950/40 p-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-300">AI Confidence Threshold</label>
+                  <span className="text-xs font-semibold text-indigo-300">{confidenceThreshold}%</span>
+                </div>
+                <Slider
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={[confidenceThreshold]}
+                  onValueChange={(value) => setConfidenceThreshold(value[0] ?? 95)}
+                />
+                <p className="text-xs text-slate-500">
+                  If the AI is this confident that the fix is safe, it will automatically open a Pull Request without waiting for your review.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Controls */}

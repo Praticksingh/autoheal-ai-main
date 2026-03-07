@@ -9,6 +9,8 @@ export function useRunForm(onSubmit: (params: StartRunParams) => void) {
   const [userName, setUserName] = useState('');
   const [leaderName, setLeaderName] = useState('');
   const [mode, setMode] = useState<"individual" | "team">('individual');
+  const [autoApproveEnabled, setAutoApproveEnabled] = useState(false);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(95);
 
   const submitForm = useCallback(() => {
     if (!repoUrl || !userName) {
@@ -22,8 +24,15 @@ export function useRunForm(onSubmit: (params: StartRunParams) => void) {
       return;
     }
 
-    onSubmit({ repoUrl: trimmedRepoUrl, userName, leaderName: leaderName || userName, mode });
-  }, [leaderName, mode, onSubmit, repoUrl, userName]);
+    onSubmit({
+      repoUrl: trimmedRepoUrl,
+      userName,
+      leaderName: leaderName || userName,
+      mode,
+      autoApproveEnabled,
+      confidenceThreshold,
+    });
+  }, [autoApproveEnabled, confidenceThreshold, leaderName, mode, onSubmit, repoUrl, userName]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +48,10 @@ export function useRunForm(onSubmit: (params: StartRunParams) => void) {
     setLeaderName,
     mode,
     setMode,
+    autoApproveEnabled,
+    setAutoApproveEnabled,
+    confidenceThreshold,
+    setConfidenceThreshold,
     handleSubmit,
     submitForm,
   };

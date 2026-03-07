@@ -7,6 +7,7 @@ export interface AgentFix {
   status: "fixed" | "skipped" | "failed";
   confidence: number;
   diff: string;
+  highRiskScore?: boolean | number;
 }
 
 export interface TimelineEvent {
@@ -76,6 +77,7 @@ export const mockRun: AgentRun = {
       status: "fixed",
       confidence: 0.94,
       diff: "+ import { parseJSON } from '@shared/utils';",
+      highRiskScore: 91,
     },
     {
       id: "fix_2",

@@ -1,0 +1,253 @@
+const path = require('path');
+const { Octokit } = require('@octokit/rest');
+
+const REQUIRED_COMMIT_PHRASE = 'AutoHealer AI automated fix';
+
+function parseRepoUrl(repoUrl) {
+  if (!repoUrl || typeof repoUrl !== 'string') {
+    return null;
+  }
+
+  const match = repoUrl.trim().match(/^https:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/i);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    owner: match[1],
+    repo: match[2],
+  };
+}
+
+function createError(message, statusCode = 500) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+function normalizeBranchName(branchName) {
+  const fallback = `autohealer-fix-${Date.now()}`;
+  const candidate = typeof branchName === 'string' ? branchName.trim() : '';
+  if (!candidate) {
+    return fallback;
+  }
+
+  return candidate
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9/_-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^[-/]+|[-/]+$/g, '') || fallback;
+}
+
+function normalizeCommitMessage(commitMessage) {
+  const candidate = typeof commitMessage === 'string' ? commitMessage.trim() : '';
+  const fallback = 'AutoHealer AI automated CI/CD fix';
+  const baseMessage = candidate || fallback;
+
+  if (baseMessage.toLowerCase().includes(REQUIRED_COMMIT_PHRASE.toLowerCase())) {
+    return baseMessage;
+  }
+
+  return `${baseMessage} | ${REQUIRED_COMMIT_PHRASE}`;
+}
+
+function sanitizeFixedFilePath(filePath) {
+  if (typeof filePath !== 'string') {
+    throw createError('Each fixed file must include a valid filePath', 400);
+  }
+
+  const normalized = filePath.trim().replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!normalized) {
+    throw createError('Fixed file path cannot be empty', 400);
+  }
+
+  if (path.isAbsolute(normalized)) {
+    throw createError('Absolute file paths are not allowed', 400);
+  }
+
+  const segments = normalized.split('/');
+  if (segments.some((segment) => !segment || segment === '.' || segment === '..')) {
+    throw createError(`Invalid fixed file path: ${filePath}`, 400);
+  }
+
+  if (segments[0] === '.git') {
+    throw createError('Modifying .git files is not allowed', 400);
+  }
+
+  return normalized;
+}
+
+function applySnippetDiff(originalContent, diff) {
+  if (!diff || typeof diff !== 'string') {
+    return originalContent;
+  }
+
+  const addedLines = diff
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('+') && !line.startsWith('+++'))
+    .map((line) => line.slice(1));
+
+  if (addedLines.length === 0) {
+    return originalContent;
+  }
+
+  return `${originalContent}${originalContent.endsWith('\n') || originalContent.length === 0 ? '' : '\n'}${addedLines.join('\n')}`;
+}
+
+async function ensureGitHubAccess({ owner, repo, octokit }) {
+
+  try {
+    await octokit.repos.get({ owner, repo });
+  } catch (error) {
+    throw createError('Unable to access repository with provided GitHub token', 403);
+  }
+}
+
+async function getMainBranchHeadSha(octokit, owner, repo) {
+  try {
+    const mainRef = await octokit.git.getRef({
+      owner,
+      repo,
+      ref: 'heads/main',
+    });
+
+    return mainRef.data.object.sha;
+  } catch {
+    throw createError('Unable to find main branch reference on repository', 400);
+  }
+}
+
+async function getExistingFileSha({ octokit, owner, repo, filePath, ref }) {
+  try {
+    const response = await octokit.repos.getContent({
+      owner,
+      repo,
+      path: filePath,
+      ref,
+    });
+
+    if (Array.isArray(response.data)) {
+      return null;
+    }
+
+    return response.data.sha || null;
+  } catch (error) {
+    if (error && error.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+function resolveNextFileContent(fixedFile) {
+  if (typeof fixedFile.content === 'string') {
+    return fixedFile.content;
+  }
+
+  if (typeof fixedFile.diff === 'string') {
+    return applySnippetDiff('', fixedFile.diff);
+  }
+
+  throw createError(`No applicable patch content for ${fixedFile.filePath || fixedFile.fileName}`, 400);
+}
+
+async function commitFixToRepository({ repoUrl, branchName, commitMessage, fixedFiles, aiExplanation }) {
+  if (!Array.isArray(fixedFiles) || fixedFiles.length === 0) {
+    throw createError('fixedFiles must include at least one file', 400);
+  }
+
+  const parsedRepo = parseRepoUrl(repoUrl);
+  if (!parsedRepo) {
+    throw createError('Invalid GitHub repository URL', 400);
+  }
+
+  const githubToken = process.env.GITHUB_TOKEN;
+  if (!githubToken) {
+    throw createError('GITHUB_TOKEN is not configured on the server', 500);
+  }
+
+  const octokit = new Octokit({ auth: githubToken });
+  const safeBranchName = normalizeBranchName(branchName);
+  const finalCommitMessage = normalizeCommitMessage(commitMessage);
+  const { owner, repo } = parsedRepo;
+  const prTitle = 'AutoHealer AI Fix';
+  const prBody = typeof aiExplanation === 'string' && aiExplanation.trim()
+    ? aiExplanation.trim()
+    : 'Automated fix generated by AutoHealer AI.';
+
+  await ensureGitHubAccess({ owner, repo, octokit });
+
+  const mainSha = await getMainBranchHeadSha(octokit, owner, repo);
+
+  try {
+    await octokit.git.createRef({
+      owner,
+      repo,
+      ref: `refs/heads/${safeBranchName}`,
+      sha: mainSha,
+    });
+  } catch (error) {
+    if (error && error.status === 422) {
+      throw createError(`Branch ${safeBranchName} already exists`, 409);
+    }
+
+    throw error;
+  }
+
+  const touchedFiles = [];
+  let latestCommitSha = mainSha;
+
+  for (const fixedFile of fixedFiles) {
+    const relativePath = sanitizeFixedFilePath(fixedFile.filePath || fixedFile.fileName);
+    const nextContent = resolveNextFileContent({ ...fixedFile, filePath: relativePath });
+    const existingFileSha = await getExistingFileSha({
+      octokit,
+      owner,
+      repo,
+      filePath: relativePath,
+      ref: safeBranchName,
+    });
+
+    const updateResponse = await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: relativePath,
+      branch: safeBranchName,
+      message: finalCommitMessage,
+      content: Buffer.from(nextContent, 'utf8').toString('base64'),
+      ...(existingFileSha ? { sha: existingFileSha } : {}),
+    });
+
+    latestCommitSha = updateResponse.data.commit.sha;
+    touchedFiles.push(relativePath);
+  }
+
+  if (touchedFiles.length === 0) {
+    throw createError('No file changes were generated to commit', 400);
+  }
+
+  const pullRequest = await octokit.pulls.create({
+    owner,
+    repo,
+    title: prTitle,
+    head: safeBranchName,
+    base: 'main',
+    body: prBody,
+  });
+
+  return {
+    repository: `${owner}/${repo}`,
+    branchName: safeBranchName,
+    commitHash: latestCommitSha,
+    commitMessage: finalCommitMessage,
+    committedFiles: touchedFiles,
+    pullRequestNumber: pullRequest.data.number,
+    pullRequestUrl: pullRequest.data.html_url,
+  };
+}
+
+module.exports = {
+  commitFixToRepository,
+};
