@@ -11,28 +11,30 @@ export default function SmoothScrollApp() {
 			return;
 		}
 
-		const lenis = new Lenis({
-			duration: 0.8,
-			smooth: true,
-			direction: "vertical",
-			gestureDirection: "vertical",
-			smoothTouch: false,
-			touchMultiplier: 1.2,
-			lerp: 0.12,
-		});
+		try {
+			const lenis = new Lenis({
+				duration: 0.8,
+				direction: "vertical",
+				gestureDirection: "vertical",
+				touchMultiplier: 1.2,
+				lerp: 0.12,
+			});
 
-		let rafId = 0;
-		const raf = (time: number) => {
-			lenis.raf(time);
+			let rafId = 0;
+			const raf = (time: number) => {
+				lenis.raf(time);
+				rafId = requestAnimationFrame(raf);
+			};
+
 			rafId = requestAnimationFrame(raf);
-		};
 
-		rafId = requestAnimationFrame(raf);
-
-		return () => {
-			cancelAnimationFrame(rafId);
-			lenis.destroy();
-		};
+			return () => {
+				cancelAnimationFrame(rafId);
+				lenis.destroy();
+			};
+		} catch (err) {
+			console.warn("Lenis smooth scroll failed to initialize:", err);
+		}
 	}, []);
 
 	return <App />;

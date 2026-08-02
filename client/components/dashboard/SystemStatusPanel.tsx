@@ -5,10 +5,10 @@ import { API_BASE_URL } from '@/config';
 
 function StatusRow({ label, active }: { label: string; active: boolean }) {
   return (
-    <div className="flex items-center justify-between rounded-md border border-white/10 bg-slate-900/50 px-3 py-2">
-      <span className="text-xs text-slate-300">{label}</span>
-      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? 'bg-green-500/15 text-green-300 border border-green-500/30' : 'bg-red-500/15 text-red-300 border border-red-500/30'}`}>
-        {active ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+    <div className="flex items-center justify-between rounded-md border border-[#30363d] bg-[#0d1117] px-3.5 py-2">
+      <span className="text-xs font-mono font-medium text-[#c9d1d9]">{label}</span>
+      <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono font-bold ${active ? 'bg-[rgba(46,160,67,0.15)] text-[#3fb950] border border-[#238636]' : 'bg-[rgba(248,81,73,0.15)] text-[#f85149] border border-[rgba(248,81,73,0.4)]'}`}>
+        {active ? <CheckCircle2 className="h-3 w-3 text-[#3fb950]" /> : <AlertTriangle className="h-3 w-3 text-[#f85149]" />}
         {active ? 'Active' : 'Offline'}
       </span>
     </div>
@@ -62,12 +62,12 @@ export default function SystemStatusPanel() {
   const agentReady = state.analysisStatus !== 'running';
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/55 to-slate-900/70 p-5 shadow-xl backdrop-blur-xl">
-      <div className="mb-4 flex items-center gap-2">
-        <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-2">
-          <Activity className="h-4 w-4 text-blue-300" />
+    <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-6 shadow-md text-[#f0f6fc] transition-all hover:border-[#8b949e]">
+      <div className="mb-4 flex items-center gap-3 pb-3 border-b border-[#30363d]">
+        <div className="p-2 rounded-md bg-[#21262d] border border-[#30363d] text-[#58a6ff]">
+          <Activity className="h-4 w-4" />
         </div>
-        <h3 className="text-sm font-semibold text-slate-100">System Status</h3>
+        <h3 className="text-base font-bold font-sans text-[#f0f6fc]">System Status</h3>
       </div>
       <div className="space-y-2">
         <StatusRow label="Backend Connected" active={backendConnected} />

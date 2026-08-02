@@ -110,12 +110,14 @@ export default function PipelineTimeline() {
       );
 
       let status: StageStatus = 'pending';
-      if (stageEvents.some((event) => event.status === 'failed')) {
+      if (state.analysisStatus === 'completed') {
+        status = stageEvents.some((event) => event.status === 'failed') ? 'failed' : 'success';
+      } else if (stageEvents.some((event) => event.status === 'failed')) {
         status = 'failed';
-      } else if (stageEvents.some((event) => event.status === 'running')) {
-        status = 'running';
       } else if (stageEvents.some((event) => event.status === 'success')) {
         status = 'success';
+      } else if (stageEvents.some((event) => event.status === 'running')) {
+        status = 'running';
       } else if (state.analysisStatus === 'running' && index === 0) {
         status = 'running';
       }
@@ -133,26 +135,26 @@ export default function PipelineTimeline() {
   const progress = Math.round((completedCount / STAGES.length) * 100);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/55 to-slate-900/70 p-6 shadow-xl backdrop-blur-xl">
+    <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-6 shadow-md text-[#f0f6fc]">
       <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-100">Pipeline Execution Flow</h3>
-        <span className="rounded-full border border-blue-500/30 bg-blue-500/15 px-3 py-1 text-xs font-medium text-blue-300">
+        <h3 className="text-lg font-bold font-sans text-[#f0f6fc]">Pipeline Execution Flow</h3>
+        <span className="rounded-md border border-[#30363d] bg-[#21262d] px-3 py-1 text-xs font-mono font-bold text-[#58a6ff]">
           {progress}% complete
         </span>
       </div>
 
-      <div className="mb-8">
-        <div className="mb-3 grid grid-cols-6 gap-2 text-center text-[11px] uppercase tracking-wide text-slate-400">
+      <div className="mb-6">
+        <div className="mb-3 grid grid-cols-6 gap-2 text-center text-[11px] font-mono font-bold uppercase tracking-wider text-[#8b949e]">
           {STAGES.map((stage) => (
             <span key={stage.key}>{stage.shortLabel}</span>
           ))}
         </div>
-        <div className="relative h-2 overflow-hidden rounded-full border border-white/10 bg-slate-800/70">
+        <div className="relative h-2 overflow-hidden rounded-full border border-[#30363d] bg-[#0d1117]">
           <motion.div
             initial={{ width: '0%' }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-green-500"
+            className="h-full bg-[#238636] shadow-[0_0_10px_#238636]"
           />
         </div>
       </div>
@@ -169,12 +171,12 @@ export default function PipelineTimeline() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="rounded-xl border border-white/10 bg-slate-900/45"
+              className="rounded-md border border-[#30363d] bg-[#0d1117] text-[#c9d1d9] shadow-sm transition-all hover:border-[#8b949e]"
             >
               <button
                 type="button"
                 onClick={() => setExpandedStage(isExpanded ? null : stage.key)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left font-semibold text-[#f0f6fc] text-xs font-mono"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative">

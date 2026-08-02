@@ -41,25 +41,25 @@ export default function AgentActivityFeed() {
   }, [activeMessage]);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-950/90 p-5 shadow-xl">
-      <div className="mb-4 flex items-center gap-2">
-        <div className="rounded-md border border-purple-500/30 bg-purple-500/10 p-2">
-          <Activity className="h-4 w-4 text-purple-300" />
+    <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-6 shadow-md text-[#f0f6fc] transition-all hover:border-[#8b949e]">
+      <div className="mb-4 flex items-center gap-3 pb-3 border-b border-[#30363d]">
+        <div className="p-2 rounded-md bg-[#21262d] border border-[#30363d] text-[#58a6ff]">
+          <Activity className="h-4 w-4" />
         </div>
-        <h3 className="text-sm font-semibold text-slate-100">Live Agent Execution Feed</h3>
+        <h3 className="text-base font-bold font-sans text-[#f0f6fc]">Live Agent Execution Feed</h3>
       </div>
 
-      <div className="mb-4 rounded-lg border border-white/10 bg-slate-950/70 p-3 font-mono text-xs text-green-300">
-        <div className="mb-2 flex items-center gap-2 text-slate-500">
+      <div className="mb-4 rounded-md border border-[#30363d] bg-[#0d1117] p-4 font-mono text-xs text-[#c9d1d9] shadow-inner">
+        <div className="mb-2 flex items-center gap-2 text-[#58a6ff] font-bold">
           <Terminal className="h-3.5 w-3.5" />
           terminal stream
         </div>
-        <div className="min-h-5">
+        <div className="min-h-5 text-[#3fb950] font-semibold">
           {'>'} {typed}
           <motion.span
             animate={{ opacity: [0, 1, 0] }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="ml-1 inline-block h-3 w-1 bg-green-300 align-middle"
+            className="ml-1 inline-block h-3 w-1.5 bg-[#3fb950] align-middle"
           />
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function AgentActivityFeed() {
             initial={{ opacity: 0, x: -6 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.04 }}
-            className="rounded-md border border-white/10 bg-slate-900/60 px-3 py-2 text-xs text-slate-300"
+            className="rounded-md border border-[#30363d] bg-[#21262d] px-3.5 py-2 text-xs font-mono text-[#c9d1d9] shadow-sm"
           >
             {message}
           </motion.div>

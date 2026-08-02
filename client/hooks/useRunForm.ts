@@ -13,8 +13,12 @@ export function useRunForm(onSubmit: (params: StartRunParams) => void) {
   const [confidenceThreshold, setConfidenceThreshold] = useState(95);
 
   const submitForm = useCallback(() => {
-    if (!repoUrl || !userName) {
-      toast.error('Repository URL and team name are required.');
+    if (!repoUrl) {
+      toast.error('Repository URL is required.');
+      return;
+    }
+    if (!userName) {
+      toast.error(mode === 'individual' ? 'Developer handle / name is required.' : 'Team name is required.');
       return;
     }
 

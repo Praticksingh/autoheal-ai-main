@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Terminal, ArrowLeft, RotateCcw, GitCommitHorizontal, Search, ScanSearch, Settings2 } from "lucide-react";
+import { Terminal, ArrowLeft, RotateCcw, GitCommitHorizontal, Search, ScanSearch, Settings2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -125,38 +125,33 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Animated background layers */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.16),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_35%)]" />
-      </div>
-
-      {/* Top Bar with Glassmorphism */}
-      <header className="sticky top-0 z-50 border-b border-white/10 backdrop-blur-xl bg-slate-950/80">
-        <div className="container mx-auto max-w-7xl flex h-16 items-center justify-between px-6">
+    <div className="min-h-screen bg-[#0d1117] text-[#c9d1d9] font-sans relative overflow-x-hidden">
+      {/* Top Bar matching GitHub Header */}
+      <header className="sticky top-0 z-50 border-b border-[#30363d] bg-[#161b22]/95 backdrop-blur-xl text-[#f0f6fc]">
+        <div className="w-full flex h-16 items-center justify-between px-6 lg:px-10">
           <div className="flex items-center gap-4">
             <Link to="/">
-              <Button variant="ghost" size="sm" className="text-slate-400 hover:text-slate-100 gap-2 transition-all hover:bg-slate-800/60">
-                <ArrowLeft className="h-4 w-4" />
-                Back
+              <Button variant="ghost" size="sm" className="text-[#c9d1d9] hover:text-white hover:bg-[#21262d] gap-2 transition-all rounded-md px-3 font-semibold text-xs border border-[#30363d]">
+                <ArrowLeft className="h-4 w-4 text-[#8b949e]" />
+                Back to Home
               </Button>
             </Link>
-            <div className="h-5 w-px bg-white/10" />
+            <div className="h-4 w-px bg-[#30363d]" />
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30">
-                <Terminal className="h-5 w-5 text-indigo-400" />
+              <div className="p-2 rounded-md bg-[#21262d] border border-[#30363d] text-[#58a6ff]">
+                <Terminal className="h-4 w-4" />
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-base text-slate-100">AutoHealer AI</span>
-                <span className="text-xs text-slate-400">Autonomous DevOps Healing System</span>
+                <span className="font-bold text-base text-[#f0f6fc] font-mono">AutoHealer <span className="text-[#3fb950]">AI</span></span>
+                <span className="hidden sm:inline-block text-xs text-[#8b949e] font-medium">| GitHub DevOps Autonomous Healing</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {activeRun && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-medium text-emerald-300">Agent Active</span>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-[rgba(46,160,67,0.15)] border border-[#238636]">
+                <span className="h-2 w-2 rounded-full bg-[#3fb950] animate-pulse" />
+                <span className="text-xs font-semibold text-[#3fb950]">Agent Active</span>
               </div>
             )}
             <TooltipProvider delayDuration={120}>
@@ -167,11 +162,11 @@ const Dashboard = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsCommandPaletteOpen(true)}
-                    className="border-white/15 bg-slate-900/50 text-slate-300 hover:bg-slate-800/80 hover:text-slate-100"
+                    className="rounded-md border-[#30363d] bg-[#21262d] text-[#c9d1d9] hover:bg-[#30363d] hover:text-white font-mono text-xs"
                   >
-                    <Search className="h-4 w-4 mr-1" />
-                    Command
-                    <span className="ml-2 rounded border border-white/20 px-1.5 py-0.5 text-[10px]">⌘K</span>
+                    <Search className="h-3.5 w-3.5 mr-1.5 text-[#58a6ff]" />
+                    Command Palette
+                    <span className="ml-2 rounded border border-[#30363d] bg-[#161b22] px-1.5 py-0.5 text-[10px] text-[#8b949e]">⌘K</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Open global command palette</TooltipContent>
@@ -180,6 +175,24 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
+
+      {/* Dashboard GitHub Dark Banner */}
+      <section className="relative bg-[#161b22] pt-10 pb-16 text-[#f0f6fc] overflow-hidden border-b border-[#30363d]">
+        <div className="max-w-[1500px] mx-auto px-6 lg:px-10 flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#30363d] bg-[#21262d] px-3.5 py-1 text-xs font-mono text-[#58a6ff] mb-3">
+              <Sparkles className="h-3.5 w-3.5 text-[#3fb950]" />
+              GitHub DevOps Autonomous Healing Dashboard
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold font-sans text-[#f0f6fc] tracking-tight">
+              DevOps Healing Dashboard
+            </h1>
+            <p className="text-[#8b949e] text-sm mt-1 max-w-xl font-normal">
+              Run automated AST code diagnostics, trace test failures, and generate AI patches in real-time.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <main className="container mx-auto max-w-[1500px] px-6 py-8 relative z-10 space-y-8">
         {/* Input Panel */}
@@ -194,7 +207,7 @@ const Dashboard = () => {
                 type="button"
                 onClick={() => setIsCommitDialogOpen(true)}
                 disabled={isCommitting}
-                className="bg-indigo-500 text-white hover:bg-indigo-400 shadow-lg shadow-indigo-500/20 transition-colors"
+                className="bg-[#238636] hover:bg-[#2ea043] text-white font-semibold h-11 px-7 rounded-md border border-[rgba(240,246,252,0.1)] shadow-sm font-mono text-xs uppercase tracking-wider"
               >
                 {isCommitting ? (
                   <div className="flex items-center gap-2">
@@ -203,8 +216,8 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <>
-                    <GitCommitHorizontal className="h-4 w-4 mr-2" />
-                    Commit Fix to Repository
+                    <GitCommitHorizontal className="h-4 w-4 mr-2 text-white" />
+                    Commit Verified Fixes to Repository
                   </>
                 )}
               </Button>
@@ -218,9 +231,9 @@ const Dashboard = () => {
               type="button"
               size="sm"
               onClick={retryLastRun}
-              className="bg-red-500/15 hover:bg-red-500/25 text-red-100 border border-red-500/30"
+              className="bg-[rgba(248,81,73,0.15)] hover:bg-[rgba(248,81,73,0.25)] text-[#f85149] border border-[rgba(248,81,73,0.4)] rounded-md font-mono text-xs"
             >
-              <RotateCcw className="h-4 w-4 mr-1" /> Retry Run
+              <RotateCcw className="h-3.5 w-3.5 mr-1" /> Retry Run
             </Button>
           </div>
         )}
@@ -238,9 +251,9 @@ const Dashboard = () => {
             </div>
 
             {isRunning && (
-              <div className="rounded-xl border border-indigo-500/20 bg-slate-900/80 px-4 py-3">
-                <div className="h-2 w-40 rounded bg-indigo-400/30 animate-pulse" />
-                <div className="mt-2 h-2 w-64 rounded bg-slate-700/70 animate-pulse" />
+              <div className="rounded-md border border-[#30363d] bg-[#161b22] px-4 py-3">
+                <div className="h-2 w-40 rounded bg-[#21262d] animate-pulse" />
+                <div className="mt-2 h-2 w-64 rounded bg-[#21262d] animate-pulse" />
               </div>
             )}
 
@@ -265,7 +278,7 @@ const Dashboard = () => {
         </div>
 
         {!activeRun && !isRunning && (
-          <div className="rounded-xl border border-dashed border-white/10 bg-slate-900/40 px-5 py-4 text-sm text-slate-400 backdrop-blur-sm">
+          <div className="rounded-md border border-dashed border-[#30363d] bg-[#161b22] px-5 py-4 text-xs font-mono text-[#8b949e]">
             Run Agent to start live pipeline visualization, bug detection, and automated fix insights.
           </div>
         )}

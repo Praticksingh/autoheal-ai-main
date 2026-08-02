@@ -1,230 +1,261 @@
-import { useEffect } from "react";
-import { GitBranch, User, Users, Play, Loader2, Copy, Info, Keyboard } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { type StartRunParams } from "@/services/agentService";
-import { useRunForm } from "@/hooks/useRunForm";
-import { toast } from "@/components/ui/sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import React, { useState } from 'react';
+import {
+  GitBranch,
+  Copy,
+  Info,
+  Keyboard,
+  User,
+  Users,
+  Play,
+  Loader2,
+} from 'lucide-react';
+import { useAnalysis } from '@/context/AnalysisContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { toast } from '@/components/ui/sonner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface InputPanelProps {
-  onStartRun: (params: StartRunParams) => void;
+  onStartRun: (data: { repoUrl: string; userName: string; leaderName: string; mode: string }) => void;
   isRunning: boolean;
 }
 
-const InputPanel = ({ onStartRun, isRunning }: InputPanelProps) => {
-  const {
-    repoUrl,
-    setRepoUrl,
-    userName,
-    setUserName,
-    leaderName,
-    setLeaderName,
-    mode,
-    setMode,
-    autoApproveEnabled,
-    setAutoApproveEnabled,
-    confidenceThreshold,
-    setConfidenceThreshold,
-    handleSubmit,
-    submitForm,
-  } = useRunForm(onStartRun);
+const GITHUB_REPO_URL_REGEX = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/i;
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        if (!isRunning) {
-          submitForm();
-        }
-      }
-    };
+export const InputPanel: React.FC<InputPanelProps> = ({ onStartRun, isRunning }) => {
+  const { state } = useAnalysis();
+  const [repoUrl, setRepoUrl] = useState('');
+  const [userName, setUserName] = useState('');
+  const [leaderName, setLeaderName] = useState('');
+  const [mode, setMode] = useState<'individual' | 'team'>('individual');
+  const [autoApproveEnabled, setAutoApproveEnabled] = useState(false);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(95);
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isRunning, submitForm]);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleCopyRepo = async () => {
     if (!repoUrl.trim()) {
-      toast.error('Enter a repository URL to copy.');
+      toast.error('Repository URL is required.');
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(repoUrl.trim());
-      toast.success('Repository URL copied.');
-    } catch {
-      toast.error('Unable to copy repository URL.');
+    if (!userName.trim()) {
+      if (mode === 'individual') {
+        toast.error('Developer handle / name is required.');
+      } else {
+        toast.error('Team name is required.');
+      }
+      return;
+    }
+
+    const trimmedRepoUrl = repoUrl.trim();
+    if (!GITHUB_REPO_URL_REGEX.test(trimmedRepoUrl)) {
+      toast.error('Invalid repository URL. Please use format https://github.com/owner/repository');
+      return;
+    }
+
+    onStartRun({
+      repoUrl: trimmedRepoUrl,
+      userName: userName.trim(),
+      leaderName: leaderName.trim() || userName.trim(),
+      mode,
+    });
+  };
+
+  const handleCopyRepo = () => {
+    if (repoUrl) {
+      navigator.clipboard.writeText(repoUrl);
+      toast.success('Repository URL copied to clipboard');
     }
   };
 
   return (
-    <div className="group">
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl p-8 transition-all duration-300 hover:border-white/20 hover:shadow-2xl shadow-xl">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2.5 rounded-lg bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 border border-indigo-500/30 group-hover:border-indigo-500/50 transition-colors">
-            <GitBranch className="h-5 w-5 text-indigo-400" />
-          </div>
-          <h2 className="text-lg font-semibold text-slate-100">Start New Agent Run</h2>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Repository Input */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-slate-300">GitHub Repository URL</label>
-              <div className="flex items-center gap-2">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="text-slate-500 hover:text-slate-300 transition-colors">
-                      <Info className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Use a public URL like https://github.com/org/repo
-                  </TooltipContent>
-                </Tooltip>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyRepo}
-                  className="h-8 border-white/10 bg-slate-900/40 text-slate-200 hover:bg-slate-800"
-                >
-                  <Copy className="h-3.5 w-3.5 mr-1" /> Copy
-                </Button>
-              </div>
+    <TooltipProvider delayDuration={120}>
+      <div className="group">
+        <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-6 shadow-md text-[#f0f6fc]">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2.5 rounded-md bg-[#21262d] border border-[#30363d] text-[#58a6ff]">
+              <GitBranch className="h-5 w-5" />
             </div>
-            <Input
-              placeholder="https://github.com/org/repo"
-              value={repoUrl}
-              onChange={(e) => setRepoUrl(e.target.value)}
-              className="bg-slate-900/50 border-white/10 text-slate-100 placeholder:text-slate-500 h-11 rounded-lg focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all duration-300"
-            />
-            <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-              <Keyboard className="h-3.5 w-3.5" />
-              Shortcut: Ctrl/Cmd + Enter to run agent
-            </p>
+            <h2 className="text-lg font-bold text-[#f0f6fc] font-sans">Start New Repository Diagnosis</h2>
           </div>
 
-          {/* Grid Inputs */}
-          <div className="grid sm:grid-cols-2 gap-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Repository Input */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">User / Team Name</label>
-              <Input
-                placeholder="acme-corp"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                className="bg-slate-900/50 border-white/10 text-slate-100 placeholder:text-slate-500 h-11 rounded-lg focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all duration-300"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Leader Name</label>
-              <Input
-                placeholder="sarah"
-                value={leaderName}
-                onChange={(e) => setLeaderName(e.target.value)}
-                className="bg-slate-900/50 border-white/10 text-slate-100 placeholder:text-slate-500 h-11 rounded-lg focus:border-indigo-500/50 focus:ring-indigo-500/20 transition-all duration-300"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-slate-900/40 p-4 space-y-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#8b949e]">Target Repository URL</label>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-slate-200">Enable Zero-Touch Auto-Healing for Minor Errors (Linting/Syntax)</p>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button type="button" className="text-slate-500 hover:text-slate-300 transition-colors">
-                        <Info className="h-3.5 w-3.5" />
+                      <button type="button" className="text-[#8b949e] hover:text-white transition-colors">
+                        <Info className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Automatically opens a PR when confidence is high and issue type is minor.
+                      Enter any public GitHub repo URL (e.g. https://github.com/owner/repository)
                     </TooltipContent>
                   </Tooltip>
+                  {repoUrl && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyRepo}
+                      className="h-8 border-[#30363d] bg-[#21262d] text-[#c9d1d9] hover:bg-[#30363d] hover:text-white font-mono text-xs rounded-md"
+                    >
+                      <Copy className="h-3.5 w-3.5 mr-1 text-[#58a6ff]" /> Copy URL
+                    </Button>
+                  )}
                 </div>
-                <p className="mt-1 text-xs text-slate-500">Allow AutoHealer to open a Pull Request automatically for safe, high-confidence minor fixes.</p>
               </div>
-              <Switch
-                checked={autoApproveEnabled}
-                onCheckedChange={setAutoApproveEnabled}
-                aria-label="Enable Zero-Touch Auto-Healing"
+              <Input
+                placeholder="https://github.com/owner/repository"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                className="bg-[#0d1117] border-[#30363d] text-[#c9d1d9] placeholder-[#8b949e] h-11 rounded-md focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] transition-all font-mono text-xs shadow-inner"
               />
-            </div>
-
-            {autoApproveEnabled && (
-              <div className="space-y-3 rounded-lg border border-white/10 bg-slate-950/40 p-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-slate-300">AI Confidence Threshold</label>
-                  <span className="text-xs font-semibold text-indigo-300">{confidenceThreshold}%</span>
-                </div>
-                <Slider
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={[confidenceThreshold]}
-                  onValueChange={(value) => setConfidenceThreshold(value[0] ?? 95)}
-                />
-                <p className="text-xs text-slate-500">
-                  If the AI is this confident that the fix is safe, it will automatically open a Pull Request without waiting for your review.
-                </p>
+              
+              {/* Quick Repo Chips */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-[#8b949e]">Quick Test:</span>
+                <button
+                  type="button"
+                  onClick={() => setRepoUrl('https://github.com/priyansh9936905290-ux/intro-to-backend')}
+                  className="rounded-md border border-[#30363d] bg-[#21262d] px-3 py-1 text-xs font-mono text-[#58a6ff] hover:bg-[#30363d] hover:text-white transition-colors"
+                >
+                  intro-to-backend
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRepoUrl('https://github.com/priyansh9936905290-ux/todo')}
+                  className="rounded-md border border-[#30363d] bg-[#21262d] px-3 py-1 text-xs font-mono text-[#58a6ff] hover:bg-[#30363d] hover:text-white transition-colors"
+                >
+                  todo
+                </button>
               </div>
-            )}
-          </div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-between pt-4">
-            {/* Mode Toggle */}
-            <div className="flex items-center gap-2 p-1 rounded-lg bg-slate-900/50 border border-white/10">
-              <button
-                type="button"
-                onClick={() => setMode("individual")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ${
-                  mode === "individual"
-                    ? "bg-gradient-to-r from-indigo-500/80 to-indigo-600/80 text-white shadow-lg"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <User className="h-4 w-4" /> Individual
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("team")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all duration-300 ${
-                  mode === "team"
-                    ? "bg-gradient-to-r from-indigo-500/80 to-indigo-600/80 text-white shadow-lg"
-                    : "text-slate-400 hover:text-slate-200"
-                }`}
-              >
-                <Users className="h-4 w-4" /> Team
-              </button>
+              <p className="mt-2.5 flex items-center gap-2 text-xs text-[#8b949e]">
+                <Keyboard className="h-3.5 w-3.5 text-[#58a6ff]" />
+                Shortcut: Press <kbd className="rounded border border-[#30363d] bg-[#0d1117] px-1.5 py-0.5 text-[10px] font-mono text-[#c9d1d9]">Ctrl + Enter</kbd> to launch analysis
+              </p>
             </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={isRunning || !repoUrl || !userName}
-              className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold gap-2 h-11 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isRunning ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" /> Running...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4" /> Run Agent
-                </>
+            {/* Grid Inputs */}
+            <div className="grid sm:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#8b949e] mb-2">
+                  {mode === 'individual' ? 'Developer Handle / Name' : 'Team Name / Organization'}
+                </label>
+                <Input
+                  placeholder={mode === 'individual' ? 'e.g. alex-developer' : 'e.g. devops-core-team'}
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  className="bg-[#0d1117] border-[#30363d] text-[#c9d1d9] placeholder-[#8b949e] h-10 rounded-md focus:border-[#58a6ff] font-mono text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#8b949e] mb-2">
+                  {mode === 'individual' ? 'Reviewer / Team Lead (Optional)' : 'Team Lead / Manager'}
+                </label>
+                <Input
+                  placeholder={mode === 'individual' ? 'e.g. lead-reviewer' : 'e.g. team-lead-name'}
+                  value={leaderName}
+                  onChange={(e) => setLeaderName(e.target.value)}
+                  className="bg-[#0d1117] border-[#30363d] text-[#c9d1d9] placeholder-[#8b949e] h-10 rounded-md focus:border-[#58a6ff] font-mono text-xs"
+                />
+              </div>
+            </div>
+
+            {/* Zero-Touch Switch */}
+            <div className="rounded-md border border-[#30363d] bg-[#0d1117] p-4 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-semibold text-[#f0f6fc]">Enable Zero-Touch Auto-Healing</p>
+                  </div>
+                  <p className="mt-1 text-xs text-[#8b949e]">Allow AutoHealer to commit minor fixes automatically when confidence exceeds threshold.</p>
+                </div>
+                <Switch
+                  checked={autoApproveEnabled}
+                  onCheckedChange={setAutoApproveEnabled}
+                  aria-label="Enable Zero-Touch Auto-Healing"
+                />
+              </div>
+
+              {autoApproveEnabled && (
+                <div className="space-y-3 rounded-md border border-[#30363d] bg-[#161b22] p-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-[#8b949e]">AI Confidence Threshold</label>
+                    <span className="text-xs font-mono font-bold text-[#58a6ff]">{confidenceThreshold}%</span>
+                  </div>
+                  <Slider
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={[confidenceThreshold]}
+                    onValueChange={(value) => setConfidenceThreshold(value[0] ?? 95)}
+                  />
+                </div>
               )}
-            </Button>
-          </div>
-        </form>
+            </div>
+
+            {/* Submit Action Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#30363d]">
+              <div className="flex items-center gap-2 bg-[#0d1117] p-1 rounded-md border border-[#30363d]">
+                <button
+                  type="button"
+                  onClick={() => setMode("individual")}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-semibold text-xs transition-all ${
+                    mode === "individual"
+                      ? "bg-[#21262d] text-white border border-[#30363d]"
+                      : "text-[#8b949e] hover:text-white"
+                  }`}
+                >
+                  <User className="h-3.5 w-3.5 text-[#58a6ff]" /> Individual Mode
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("team")}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-semibold text-xs transition-all ${
+                    mode === "team"
+                      ? "bg-[#21262d] text-white border border-[#30363d]"
+                      : "text-[#8b949e] hover:text-white"
+                  }`}
+                >
+                  <Users className="h-3.5 w-3.5 text-[#58a6ff]" /> Team Mode
+                </button>
+              </div>
+
+              {/* GitHub Green Submit Button */}
+              <Button
+                type="submit"
+                disabled={isRunning}
+                className="bg-[#238636] hover:bg-[#2ea043] text-white font-semibold gap-2 h-11 px-7 rounded-md border border-[rgba(240,246,252,0.1)] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-wider font-mono"
+              >
+                {isRunning ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Analyzing Repository...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 fill-white" /> Launch Diagnosis
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
 

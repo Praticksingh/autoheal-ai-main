@@ -137,3 +137,5 @@ export function AnalysisProvider({ children }: AnalysisProviderProps) {
     </AnalysisContext.Provider>
   );
 }
+
+export { useAnalysis } from './useAnalysis';

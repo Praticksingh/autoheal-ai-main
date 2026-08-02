@@ -13,6 +13,8 @@ function parseGitHubRepo(repoUrl) {
   };
 }
 
+const { runCommand } = require('./commandRunnerService');
+
 async function validateRepository(repoUrl) {
   if (!repoUrl || typeof repoUrl !== 'string' || !repoUrl.startsWith(REPO_URL_PREFIX)) {
     const error = new Error('Repository URL must start with https://github.com/');
@@ -20,7 +22,8 @@ async function validateRepository(repoUrl) {
     throw error;
   }
 
-  const parsed = parseGitHubRepo(repoUrl);
+  const cleanUrl = repoUrl.trim().replace(/\/+$/, '');
+  const parsed = parseGitHubRepo(cleanUrl);
 
   if (!parsed) {
     const error = new Error('Invalid GitHub repository URL');
@@ -30,7 +33,7 @@ async function validateRepository(repoUrl) {
 
   try {
     const response = await axios.get(`https://api.github.com/repos/${parsed.owner}/${parsed.repo}`, {
-      timeout: 10000,
+      timeout: 8000,
       headers: {
         Accept: 'application/vnd.github+json',
       },
@@ -54,9 +57,16 @@ async function validateRepository(repoUrl) {
       throw error;
     }
 
-    const error = new Error('Repository not accessible or does not exist');
-    error.statusCode = 400;
-    throw error;
+    // GitHub REST API may rate-limit unauthenticated requests (HTTP 403/429).
+    // Fall back to probing the repository directly via git ls-remote.
+    try {
+      console.log(`GitHub API probe fallback for ${cleanUrl}...`);
+      await runCommand(`git ls-remote --heads "${cleanUrl}"`, { timeout: 10000 });
+    } catch {
+      const error = new Error('Repository not accessible or does not exist');
+      error.statusCode = 400;
+      throw error;
+    }
   }
 
   return parsed;

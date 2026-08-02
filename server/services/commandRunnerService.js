@@ -15,10 +15,10 @@ function normalizeError(error, stderr) {
 }
 
 function runCommand(command, options = {}) {
-  const { cwd, timeout = 180000 } = options;
+  const { cwd, timeout = 180000, env = process.env } = options;
 
   return new Promise((resolve, reject) => {
-    exec(command, { cwd, timeout }, (error, stdout, stderr) => {
+    exec(command, { cwd, timeout, env }, (error, stdout, stderr) => {
       if (error) {
         reject(normalizeError(error, stderr));
         return;

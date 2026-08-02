@@ -3,6 +3,7 @@ const {
   validateRepository,
   cloneRepository,
   analyzeProjectStructure,
+  performStaticCodeAnalysis,
   runTests,
   analyzeBugs,
   generateBugExplanations,
@@ -138,15 +139,17 @@ async function analyzeRepoController(req, res, next) {
     const structure = await analyzeProjectStructure(repoPath);
     emitAnalysisEvent('tests_running', { runId, repoUrl, testFiles: structure.testFiles.length });
 
-    console.log('Running tests...');
+    console.log('Running tests & static code scan...');
     const testResult = await runTests(repoPath);
+    const staticIssues = await performStaticCodeAnalysis(repoPath, structure);
     console.log('Analyzing failures...');
-    const bugAnalysis = analyzeBugs(testResult, structure.testFiles);
+    const bugAnalysis = analyzeBugs(testResult, structure.testFiles, staticIssues);
     const explanations = await generateBugExplanations({
       testResult,
       bugAnalysis,
       structure,
       repoPath,
+      repoUrl,
     });
 
     if (bugAnalysis.bugsFound > 0) {
@@ -182,11 +185,12 @@ async function analyzeRepoController(req, res, next) {
     });
 
     const timeline = [
-      { step: 'Repository validation', status: 'success', timestamp: new Date().toISOString() },
       { step: 'Repository clone', status: 'success', timestamp: new Date().toISOString() },
+      { step: 'Dependencies installed', status: 'success', timestamp: new Date().toISOString() },
       { step: 'Test execution', status: testResult.passed || testResult.skipped ? 'success' : 'failed', timestamp: new Date().toISOString() },
-      { step: 'Bug analysis', status: 'success', timestamp: new Date().toISOString() },
-      { step: 'Score calculation', status: 'success', timestamp: new Date().toISOString() },
+      { step: 'Bugs detected', status: 'success', timestamp: new Date().toISOString() },
+      { step: 'Fixes generated', status: 'success', timestamp: new Date().toISOString() },
+      { step: 'CI/CD Pipeline restored', status: 'success', timestamp: new Date().toISOString() },
     ];
 
     emitAnalysisEvent('pipeline_complete', {

@@ -1,6 +1,6 @@
 const { validateRepository } = require('./githubService');
 const { cloneRepository } = require('./repoCloneService');
-const { analyzeProjectStructure } = require('./analysisService');
+const { analyzeProjectStructure, performStaticCodeAnalysis } = require('./analysisService');
 const { runTests } = require('./testRunnerService');
 const { analyzeBugs } = require('./bugAnalysisService');
 const { generateBugExplanations } = require('./bugExplanationService');
@@ -12,6 +12,7 @@ module.exports = {
   validateRepository,
   cloneRepository,
   analyzeProjectStructure,
+  performStaticCodeAnalysis,
   runTests,
   analyzeBugs,
   generateBugExplanations,

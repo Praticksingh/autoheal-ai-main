@@ -150,13 +150,17 @@ export function useDashboard() {
   }, [setAnalysisStatus, setBugExplanations, setBugResults, setCurrentRepo, setError, setLogs, setScore, setTimeline]);
 
   useEffect(() => {
+    const updateStep = (step: number) => {
+      setCurrentStep((prev) => Math.max(prev, step));
+    };
+
     const handleAnalysisStarted = (payload: { runId: string; repoUrl: string }) => {
       if (payload.runId !== activeRunIdRef.current) {
         return;
       }
 
       setAnalysisStatus('running');
-      setCurrentStep(1);
+      updateStep(1);
       appendLog(createLogEntry('info', 'Orchestrator', `Analysis started for ${payload.repoUrl}`));
       appendTimeline(createTimelineEvent('Orchestrator', 'Analysis started', 'running'));
     };
@@ -166,7 +170,7 @@ export function useDashboard() {
         return;
       }
 
-      setCurrentStep(2);
+      updateStep(2);
       appendLog(createLogEntry('info', 'Repo Analyzer', `Repository cloned: ${payload.repoUrl}`));
       appendTimeline(createTimelineEvent('Repo Analyzer', 'Repository cloned', 'success'));
     };
@@ -176,7 +180,7 @@ export function useDashboard() {
         return;
       }
 
-      setCurrentStep(2);
+      updateStep(2);
       appendLog(createLogEntry('info', 'Test Runner', 'Tests are running'));
       appendTimeline(createTimelineEvent('Test Runner', 'Running tests', 'running'));
     };
@@ -186,7 +190,7 @@ export function useDashboard() {
         return;
       }
 
-      setCurrentStep(3);
+      updateStep(3);
       appendLog(createLogEntry('warn', 'Bug Classifier', `${payload.bugsFound} potential issue(s) detected`));
       appendTimeline(createTimelineEvent('Bug Classifier', 'Detected test failures', 'success'));
     };
@@ -196,7 +200,7 @@ export function useDashboard() {
         return;
       }
 
-      setCurrentStep(4);
+      updateStep(4);
       appendLog(createLogEntry('info', 'Fix Generator', `${payload.bugsFixed} fix(es) applied`));
       appendTimeline(createTimelineEvent('Fix Generator', 'Applied automated fixes', 'success'));
     };
@@ -206,28 +210,12 @@ export function useDashboard() {
         return;
       }
 
-      setCurrentStep(5);
+      updateStep(5);
       setScore(payload.score);
       setAnalysisStatus('completed');
       appendLog(createLogEntry('info', 'CI/CD Monitor', 'Pipeline completed successfully'));
       appendTimeline(createTimelineEvent('CI/CD Monitor', 'Pipeline complete', 'success'));
       toast.success('Agent run completed successfully.');
-
-      if (typeof payload.bugsFound === 'number') {
-        const bugCount = payload.bugsFound;
-        const fixedCount = payload.bugsFixed ?? 0;
-        const nextFixes: AgentFix[] = Array.from({ length: bugCount }).map((_, index) => ({
-          id: `fix-${payload.runId}-${index + 1}`,
-          fileName: `auto-detected-${index + 1}.ts`,
-          bugType: 'LOGIC',
-          lineNumber: 1,
-          description: `Detected issue ${index + 1}`,
-          status: index < fixedCount ? 'fixed' : 'failed',
-          confidence: 0.8,
-          diff: '',
-        }));
-        setBugResults(nextFixes);
-      }
     };
 
     analysisSocket.on('analysis_started', handleAnalysisStarted);
@@ -271,11 +259,6 @@ export function useDashboard() {
 
       setScore(run.score);
 
-      if (run.tests?.skipped) {
-        runDemoMode(params, 'No test suite found in repository. Showing full pipeline demo.');
-        return;
-      }
-
       const mappedTimeline: TimelineEvent[] = (run.timeline || []).map((item) => createTimelineEvent(
         STAGE_TO_AGENT[item.step] || 'Pipeline Agent',
         item.step,
@@ -297,17 +280,28 @@ export function useDashboard() {
       ];
       setLogs(mappedLogs);
 
-      const fixCount = Math.max(run.bugsFound, run.fixesApplied);
-      const nextFixes: AgentFix[] = Array.from({ length: fixCount }).map((_, index) => ({
-        id: `fix-${run.runId}-${index + 1}`,
-        fileName: `src/module-${index + 1}.ts`,
-        bugType: 'LOGIC',
-        lineNumber: 10 + index,
-        description: `Detected issue ${index + 1}`,
-        status: index < run.fixesApplied ? 'fixed' : 'failed',
-        confidence: 0.75,
-        diff: '',
-      }));
+      const nextFixes: AgentFix[] = (run.explanations && run.explanations.length > 0)
+        ? run.explanations.map((exp, index) => ({
+            id: `fix-${run.runId}-${index + 1}`,
+            fileName: exp.file || `file-${index + 1}.ts`,
+            bugType: 'LOGIC',
+            lineNumber: exp.line || 1,
+            description: exp.explanation,
+            status: exp.status === 'fixed' ? 'fixed' : 'failed',
+            confidence: (exp as { confidenceScore?: number }).confidenceScore ? (exp as { confidenceScore?: number }).confidenceScore! / 100 : 0.85,
+            diff: exp.suggestedFix ? `+ ${exp.suggestedFix}` : '',
+          }))
+        : Array.from({ length: Math.max(run.bugsFound, run.fixesApplied) }).map((_, index) => ({
+            id: `fix-${run.runId}-${index + 1}`,
+            fileName: `detected-issue-${index + 1}.ts`,
+            bugType: 'LOGIC',
+            lineNumber: 1,
+            description: `Detected issue in target repository`,
+            status: index < run.fixesApplied ? 'fixed' : 'failed',
+            confidence: 0.8,
+            diff: '',
+          }));
+
       setBugResults(nextFixes);
       setBugExplanations(run.explanations || []);
 
@@ -319,13 +313,7 @@ export function useDashboard() {
       if (error instanceof Error && error.message.trim()) {
         setError(error.message);
         toast.error(error.message);
-      } else {
-        const fallbackMessage = 'The agent could not analyze this repository. Please ensure the repository is public and accessible.';
-        setError(fallbackMessage);
-        toast.error(fallbackMessage);
       }
-
-      runDemoMode(params, 'Backend analysis failed. Displaying simulated pipeline for demo continuity.');
     }
   };
 

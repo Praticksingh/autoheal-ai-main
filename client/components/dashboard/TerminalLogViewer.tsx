@@ -23,35 +23,37 @@ export default function TerminalLogViewer() {
 
   const lineClass = (level: string) => {
     if (level === 'error') {
-      return 'text-red-300';
+      return 'text-pink-400 font-bold';
     }
     if (level === 'warn') {
-      return 'text-amber-300';
+      return 'text-amber-300 font-semibold';
     }
     if (level === 'debug') {
-      return 'text-purple-300';
+      return 'text-fuchsia-300 font-semibold';
     }
-    return 'text-green-300';
+    return 'text-white font-semibold';
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-5 shadow-xl">
+    <div className="rounded-xl border border-[#30363d] bg-[#161b22] p-6 shadow-md text-[#f0f6fc] transition-all hover:border-[#8b949e]">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="mb-3 flex w-full items-center justify-between"
       >
-        <div className="flex items-center gap-2">
-          <TerminalSquare className="h-4 w-4 text-green-300" />
-          <h3 className="text-sm font-semibold text-slate-100">Terminal Log Viewer</h3>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-md bg-[#21262d] border border-[#30363d] text-[#58a6ff]">
+            <TerminalSquare className="h-4 w-4" />
+          </div>
+          <h3 className="text-base font-bold font-sans text-[#f0f6fc]">Terminal Log Viewer</h3>
         </div>
-        <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-4 w-4 text-[#8b949e] transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
-        <div className="max-h-72 overflow-y-auto rounded-lg border border-white/10 bg-black/60 p-3 font-mono text-xs">
+        <div className="max-h-72 overflow-y-auto rounded-md border border-[#30363d] bg-[#0d1117] p-4 font-mono text-xs shadow-inner text-[#c9d1d9]">
           {terminalLines.map((line, index) => (
-            <div key={`${line.text}-${index}`} className={`mb-1 ${lineClass(line.level)}`}>
+            <div key={`${line.text}-${index}`} className={`mb-1.5 ${lineClass(line.level)}`}>
               {line.text}
             </div>
           ))}

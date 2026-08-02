@@ -12,24 +12,24 @@ const ScorePanel = () => {
   const dashOffset = circumference - (Math.max(finalScore, 1) / 100) * circumference;
 
   return (
-    <div className="group rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-xl p-8 h-full flex flex-col transition-all duration-300 hover:border-white/20 hover:shadow-2xl shadow-xl">
+    <div className="group rounded-xl border border-[#30363d] bg-[#161b22] p-6 h-full flex flex-col transition-all hover:border-[#8b949e] shadow-md text-[#f0f6fc]">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8 pb-6 border-b border-white/5">
-        <div className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
-          <Trophy className="h-5 w-5 text-amber-400" />
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#30363d]">
+        <div className="p-2.5 rounded-md bg-[#21262d] border border-[#30363d] text-[#e3b341]">
+          <Trophy className="h-5 w-5" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-100">Score Breakdown</h2>
+        <h2 className="text-lg font-bold font-sans text-[#f0f6fc]">Score Breakdown</h2>
       </div>
 
-      <div className="flex flex-1 items-center justify-center py-6">
+      <div className="flex flex-1 items-center justify-center py-4">
         <div className="relative h-40 w-40">
           <svg className="h-40 w-40 -rotate-90" viewBox="0 0 140 140">
-            <circle cx="70" cy="70" r={radius} stroke="rgba(148,163,184,0.25)" strokeWidth="10" fill="none" />
+            <circle cx="70" cy="70" r={radius} stroke="#21262d" strokeWidth="10" fill="none" />
             <circle
               cx="70"
               cy="70"
               r={radius}
-              stroke="url(#pipeline-score-gradient)"
+              stroke="#238636"
               strokeWidth="10"
               fill="none"
               strokeLinecap="round"
@@ -37,17 +37,11 @@ const ScorePanel = () => {
               strokeDashoffset={dashOffset}
               className="transition-all duration-700"
             />
-            <defs>
-              <linearGradient id="pipeline-score-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#3B82F6" />
-                <stop offset="50%" stopColor="#7C3AED" />
-                <stop offset="100%" stopColor="#22C55E" />
-              </linearGradient>
-            </defs>
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <p className="text-4xl font-black text-slate-100">{finalScore}</p>
-            <p className="text-xs text-slate-400">/ 100</p>
+
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span className="text-4xl font-extrabold text-[#f0f6fc] font-mono">{finalScore}</span>
+            <span className="text-xs font-mono font-semibold text-[#8b949e] uppercase tracking-wider">/ 100</span>
           </div>
         </div>
       </div>

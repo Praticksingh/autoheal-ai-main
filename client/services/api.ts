@@ -62,7 +62,7 @@ class ApiClient {
   private readonly defaultRetryAttempts: number;
   private readonly defaultRetryDelay: number;
 
-  constructor(baseURL: string, timeoutMs: number = 15000) {
+  constructor(baseURL: string, timeoutMs: number = 60000) {
     this.defaultRetryAttempts = 2;
     this.defaultRetryDelay = 500;
     this.client = axios.create({
