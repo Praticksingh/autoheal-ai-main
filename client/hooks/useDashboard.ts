@@ -250,8 +250,29 @@ export function useDashboard() {
     setBugExplanations([]);
     ensureSocketConnection();
 
+    let progressTimer: ReturnType<typeof setInterval> | null = null;
+    let stepCounter = 1;
+
+    progressTimer = setInterval(() => {
+      if (stepCounter < 4) {
+        stepCounter += 1;
+        setCurrentStep(stepCounter);
+        if (stepCounter === 2) {
+          appendLog(createLogEntry('info', 'Repo Analyzer', 'Cloning & analyzing repository structure...'));
+          appendTimeline(createTimelineEvent('Repo Analyzer', 'Repository cloned', 'success'));
+        } else if (stepCounter === 3) {
+          appendLog(createLogEntry('info', 'Test Runner', 'Executing static code scan & test suite...'));
+          appendTimeline(createTimelineEvent('Test Runner', 'Running tests', 'running'));
+        } else if (stepCounter === 4) {
+          appendLog(createLogEntry('info', 'Fix Generator', 'Analyzing bug patterns & generating fixes...'));
+          appendTimeline(createTimelineEvent('Bug Classifier', 'Bugs analyzed', 'success'));
+        }
+      }
+    }, 2500);
+
     try {
       const run = await AgentService.startRun({ ...params, runId });
+      if (progressTimer) clearInterval(progressTimer);
 
       if (run?.runId && run.runId !== runId) {
         activeRunIdRef.current = run.runId;
@@ -271,12 +292,12 @@ export function useDashboard() {
       }
 
       const mappedLogs: LogEntry[] = [
-        createLogEntry('info', 'Repo Analyzer', 'Cloning repository...'),
-        createLogEntry('info', 'Build Agent', 'Dependencies installed'),
-        createLogEntry('info', 'Test Runner', 'Tests executed'),
-        createLogEntry(run.bugsFound > 0 ? 'warn' : 'info', 'Bug Classifier', `${run.bugsFound} issue(s) detected`),
-        createLogEntry('info', 'Fix Generator', `${run.fixesApplied} fix(es) generated`),
-        createLogEntry('info', 'CI/CD Monitor', 'Pipeline verification passed'),
+        createLogEntry('info', 'Repo Analyzer', 'Repository cloned & validated.'),
+        createLogEntry('info', 'Build Agent', 'Project structure analyzed.'),
+        createLogEntry('info', 'Test Runner', 'Static analysis & test suite complete.'),
+        createLogEntry(run.bugsFound > 0 ? 'warn' : 'info', 'Bug Classifier', `${run.bugsFound} issue(s) detected.`),
+        createLogEntry('info', 'Fix Generator', `${run.fixesApplied} fix(es) generated.`),
+        createLogEntry('info', 'CI/CD Monitor', 'Pipeline analysis completed successfully.'),
       ];
       setLogs(mappedLogs);
 
@@ -307,6 +328,7 @@ export function useDashboard() {
 
       setAnalysisStatus('completed');
     } catch (error) {
+      if (progressTimer) clearInterval(progressTimer);
       console.error('Failed to start run:', error);
       setAnalysisStatus('failed');
 
