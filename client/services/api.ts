@@ -40,20 +40,40 @@ function normalizeApiError(error: unknown): ApiError {
 
   if (axios.isAxiosError(error)) {
     const axiosError: AxiosError<ApiErrorPayload> = error;
-    const responseMessage = axiosError.response?.data?.message;
+    const baseURL = axiosError.config?.baseURL || '';
+    const url = axiosError.config?.url || '';
+    const requestedUrl = baseURL ? `${baseURL.replace(/\/$/, '')}/${url.replace(/^\//, '')}` : url;
+    const status = axiosError.response?.status;
+    const responseData = axiosError.response?.data;
+    const responseMessage = typeof responseData === 'object' && responseData && 'message' in responseData
+      ? (responseData as { message?: string }).message
+      : undefined;
+
+    const actualErrorMessage = responseMessage || axiosError.message || 'API request failed';
+
+    console.error('[AutoHealer API Error Details]', {
+      requestedUrl,
+      status: status || 'Network Error (No response)',
+      responseBody: responseData || null,
+      actualErrorMessage,
+      rawError: axiosError,
+    });
+
     return new ApiError({
-      message: responseMessage || axiosError.message || 'API request failed',
-      status: axiosError.response?.status,
+      message: actualErrorMessage,
+      status,
       statusText: axiosError.response?.statusText,
-      data: axiosError.response?.data,
+      data: responseData,
       isNetworkError: !axiosError.response,
     });
   }
 
   if (error instanceof Error) {
+    console.error('[AutoHealer API Error]', error.message);
     return new ApiError({ message: error.message });
   }
 
+  console.error('[AutoHealer API Error] Unknown error:', error);
   return new ApiError({ message: 'Unknown API error' });
 }
 

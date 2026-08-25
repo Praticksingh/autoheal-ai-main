@@ -19,17 +19,19 @@ const GITHUB_REPO_URL_REGEX = /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0
 
 function mapStartRunError(error: unknown): Error {
   if (error && typeof error === 'object' && 'isNetworkError' in error && (error as { isNetworkError?: boolean }).isNetworkError) {
-    return new Error('Backend connection failed');
+    const detail = error instanceof Error && error.message ? `: ${error.message}` : '';
+    return new Error(`Backend connection failed${detail}. Please verify the server is running and accessible.`);
   }
 
-  const message = error instanceof Error ? error.message.toLowerCase() : '';
+  const rawMessage = error instanceof Error ? error.message : String(error || '');
+  const message = rawMessage.toLowerCase();
 
   if (message.includes('spawn einval') || message.includes('invalid process arguments')) {
     return new Error('Agent failed to execute repository analysis. Please verify the repository URL and server configuration.');
   }
 
   if (message.includes('repository not accessible') || message.includes('not found')) {
-    return new Error('GitHub repository not found');
+    return new Error('GitHub repository not found or not accessible');
   }
 
   if (message.includes('private repository') || message.includes('public repository')) {
@@ -41,11 +43,11 @@ function mapStartRunError(error: unknown): Error {
   }
 
   if (message.includes('test') || message.includes('jest') || message.includes('vitest')) {
-    return new Error('Tests could not be executed');
+    return new Error('Tests could not be executed on target repository');
   }
 
-  if (error instanceof Error && error.message.trim()) {
-    return new Error(error.message);
+  if (rawMessage.trim()) {
+    return new Error(rawMessage);
   }
 
   return new Error('An unexpected error occurred during analysis. Please try again.');

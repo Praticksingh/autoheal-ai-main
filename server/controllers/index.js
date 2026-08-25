@@ -312,6 +312,7 @@ async function analyzeRepoController(req, res, next) {
 function getHealthController(req, res) {
   return res.status(200).json({
     status: 'ok',
+    message: 'AutoHealer AI backend is running',
     timestamp: new Date().toISOString(),
   });
 }
